@@ -34,21 +34,22 @@ import requests
 def map_compare(request):
     id1=request.POST.get("image1",False)
     id2 = request.POST.get("image2", False)
-    mask1_building=Mask.objects.get(id=id1,type_id=1).mask
-    mask1_farm = Mask.objects.get(id=id1, type_id=5).mask
-    mask1_forest = Mask.objects.get(id=id1, type_id=7).mask
-    mask1_shack = Mask.objects.get(id=id1, type_id=6).mask
-    mask1_water = Mask.objects.get(id=id1, type_id=4).mask
-    mask1_grass = Mask.objects.get(id=id1, type_id=3).mask
-    mask1_road = Mask.objects.get(id=id1, type_id=2).mask
-    mask2_building = Mask.objects.get(id=id2, type_id=1).mask
-    mask2_rest=Mask.objects.get(id=id2, type_id=0).mask
-    demolition_area=(((mask1_building.union(mask1_farm)).union(mask1_forest)).union(mask1_shack)).intersection(mask2_rest)
-    ibuild_area=(((mask1_grass.union(mask1_forest)).union(mask1_road)).union(mask1_water)).intersection(mask2_building)
-    demolition_area_geojson={'type': 'Feature', 'geometry': demolition_area.geojson,'properties':{'type':'change'}}
-    ibuild_area_geojson = {'type': 'Feature', 'geometry': ibuild_area.geojson, 'properties': {'type': 'change'}}
-    JsonResponse({"demolition_area":demolition_area_geojson,"ibuild_area":ibuild_area_geojson})
-
+    mask1_building=Mask.objects.get(map=67,type_id=1).mask
+    mask1_farm = Mask.objects.get(map=67, type_id=5).mask
+    mask1_forest = Mask.objects.get(map=67, type_id=7).mask
+    mask1_shack = Mask.objects.get(map=67, type_id=6).mask
+    mask1_water = Mask.objects.get(map=67, type_id=4).mask
+    mask1_grass = Mask.objects.get(map=67, type_id=3).mask
+    mask1_road = Mask.objects.get(map=67, type_id=2).mask
+    # mask2_building = Mask.objects.get(map=id2, type_id=1).mask
+    # mask2_rest=Mask.objects.get(map=id2, type_id=0).mask
+    # demolition_area=(((mask1_building.union(mask1_farm)).union(mask1_forest)).union(mask1_shack)).intersection(mask2_rest)
+    # ibuild_area=(((mask1_grass.union(mask1_forest)).union(mask1_road)).union(mask1_water)).intersection(mask2_building)
+    data={'building':mask1_building.geojson,'id1':id1,'id2':id2}
+    # demolition_area_geojson={'type': 'Feature', 'geometry': demolition_area.geojson,'properties':{'type':'change'}}
+    # ibuild_area_geojson = {'type': 'Feature', 'geometry': ibuild_area.geojson, 'properties': {'type': 'change'}}
+    # JsonResponse({"demolition_area":demolition_area_geojson,"ibuild_area":ibuild_area_geojson})
+    JsonResponse(data)
 def index(request):
     return render(request,
                   template_name='index.html')
