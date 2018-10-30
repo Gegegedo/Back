@@ -79,7 +79,7 @@ DATABASES = {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',  # 或者使用 mysql.connector.django
         'NAME': 'back',
         'USER': 'postgres',
-        'PASSWORD': '123456',
+        'PASSWORD': 'abc',
         'HOST':'localhost',
         # 'PORT':'3306',
         # 'OPTIONS':{
