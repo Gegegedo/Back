@@ -197,11 +197,17 @@ def preprogress(id):
                 # cv2.imwrite(str(label_type)+".jpg",img)
                 if label_type!=0:
                     payload = "<featureType><name>" + str(id) + '_' + str(m.type_id) + "</name><nativeName>myweb_mask</nativeName>"" \
-                    ""<cqlFilter>type_id=" + str(m.type_id) + " and map_id=" + str(m.map.id) + "</cqlFilter></featureType>"
+                    ""<cqlFilter>type_id=" + str(m.type_id) + " and map_id=" + str(id) + "</cqlFilter></featureType>"
                     headers = {'Content-type': 'text/xml'}
                     resp = requests.post(mask_url, auth=('admin', 'geoserver'), data=payload, headers=headers)
                     if resp.status_code != 201:
                         raise Exception('Upload to geoserver error')
+                    else:
+                        cat = Catalog(map_url, 'admin', 'geoserver')
+                        layer = cat.get_layer('Mask:'+str(id)+'_'+str(m.type_id))
+                        layer.default_style=cat.get_style(str(label_type), 'Mask')
+                        cat.save(layer)
+                        cat.reload()
             return "上传成功"
         except Exception as e:
             return Exception("上传失败,拟合图斑出错:"+str(e))
@@ -262,20 +268,25 @@ def preprogress(id):
                         if not isinstance(result,Exception):
                             result=save_mask()
                             if not isinstance(result,Exception):
+                                shutil.rmtree('./myweb/Detector/temp')
                                 return '上传成功'
 
     ####正式代码完
-    # cat = Catalog("http://172.20.53.157:8080/geoserver/rest/", 'admin', 'geoserver')
-    # if cat.get_layer(id):
-    #     cat.delete(cat.get_layer(id))
-    #     cat.reload()
-    # try:
-    #     if cat.get_store(name=str(id), workspace='Map'):
-    #         cat.delete(cat.get_store(name=str(id), workspace='Map'))
-    #         cat.reload()
-    # except Exception:
-    #     pass
+    cat = Catalog(map_url, 'admin', 'geoserver')
+    if cat.get_layer('Mask:'+str(id)):
+        cat.delete(cat.get_layer('Mask:'+str(id)))
+        cat.reload()
+    for label_type in range(1,8):
+        if cat.get_layer('Mask:' + str(id)+'_'+str(label_type)):
+            cat.delete(cat.get_layer('Mask:' + str(id)+'_'+str(label_type)))
+            cat.reload()
+    try:
+        if cat.get_store(name=str(id), workspace='Map'):
+            cat.delete(cat.get_store(name=str(id), workspace='Map'))
+            cat.reload()
+    except Exception:
+        pass
     if os.path.exists('./myweb/Detector/temp'):
         shutil.rmtree('./myweb/Detector/temp')
-    # Bmap.objects.filter(id=id).delete()
+    Bmap.objects.filter(id=id).delete()
     return str(result)
