@@ -119,8 +119,8 @@ def preprogress(id):
             image=None
             srcDS=None
             return RPCOrthImage
-        except Exception:
-            return Exception("上传失败，RPC正射校正出错")
+        except Exception as e:
+            return Exception("上传失败，RPC正射校正出错:"+str(e))
 
     def buildOverviews():
         try:
@@ -146,7 +146,7 @@ def preprogress(id):
             cat.reload()
             TransformDS = None
         except Exception as e:
-            return Exception("上传失败，建立金字塔出错")
+            return Exception("上传失败，建立金字塔出错"+str(e))
 
     def fit_by_contours(img,geotransfrom):
         geo = np.array([[geotransfrom[1], geotransfrom[4]], [geotransfrom[2], geotransfrom[5]]])
@@ -200,11 +200,11 @@ def preprogress(id):
                     ""<cqlFilter>type_id=" + str(m.type_id) + " and map_id=" + str(m.map.id) + "</cqlFilter></featureType>"
                     headers = {'Content-type': 'text/xml'}
                     resp = requests.post(mask_url, auth=('admin', 'geoserver'), data=payload, headers=headers)
-                if resp.status_code != 201:
-                    raise Exception('Upload to geoserver error')
+                    if resp.status_code != 201:
+                        raise Exception('Upload to geoserver error')
             return "上传成功"
         except Exception as e:
-            return Exception("上传失败,拟合图斑出错")
+            return Exception("上传失败,拟合图斑出错:"+str(e))
 #
 #     def makeDownload():
 #         try:
@@ -231,12 +231,10 @@ def preprogress(id):
 #         os.makedirs(baseurl)
 
 
-    # uploadfiles=('/media/zhou/Document/yaogan/TJ/GF2_PMS1_E117.5_N39.2_20171208_L1A0002831428','GF2_PMS1_E117.5_N39.2_20171208_L1A0002831428-MSS1_fusion.tif',
-    #              'GF2_PMS1_E117.5_N39.2_20171208_L1A0002831428-MSS1_fusion_rpc.txt')
-    # result=uploadfiles
+    # uploadfiles=(os.path.join(MAPBASEPATH,'GF2_PMS2_E117.4_N39.1_20170510_L1A0002351826'),)
     # result = detection.detection(uploadfiles[0] + "/", uploadfiles[1], uploadfiles[0])
     # if not isinstance(result, Exception):
-    #     result = RPCOrthorectification(Alpha=False, is_label=True)
+    # result =save_mask()
     # if not isinstance(result, Exception):
     #     result = save_mask()
     #     if not isinstance(result, Exception):
