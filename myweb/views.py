@@ -15,6 +15,7 @@ from myweb.models import Buser
 from myweb.models import Bmap
 from myweb.models import Mask
 import json
+from django.contrib.gis.geos import GEOSGeometry ,Polygon
 from django.core import serializers
 from django.http import FileResponse
 from django.utils import timezone
@@ -23,6 +24,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponse, JsonResponse,StreamingHttpResponse
 from wsgiref.util import FileWrapper
 import os
+from django.views.decorators.csrf import csrf_exempt
 import gdal
 from myweb.ImagryProcess import Preprocess
 import time
@@ -31,25 +33,47 @@ import tarfile
 MAPBASEPATH='/media/zhou/系统/二期图像2/天津航天城'
 import requests
 # Create your views here.
+def index_new(request):
+    return render(request,
+                  template_name='index.html')
+
+@csrf_exempt
+def map_all(request):
+    maps=Bmap.objects.all()
+    map_data=[]
+    for map in maps:
+        map=model_to_dict(map)
+        map.pop("polygon")
+        map_data.append(map)
+    return JsonResponse({'maps':map_data})
+
+
+@csrf_exempt
 def map_compare(request):
-    # id1=request.POST.get("image1",False)
-    # id2 = request.POST.get("image2", False)
-    mask1_building=Mask.objects.get(map=67,type_id=1).mask
-    mask1_farm = Mask.objects.get(map=67, type_id=5).mask
-    mask1_forest = Mask.objects.get(map=67, type_id=7).mask
-    mask1_shack = Mask.objects.get(map=67, type_id=6).mask
-    mask1_water = Mask.objects.get(map=67, type_id=4).mask
-    mask1_grass = Mask.objects.get(map=67, type_id=3).mask
-    mask1_road = Mask.objects.get(map=67, type_id=2).mask
-    # mask2_building = Mask.objects.get(map=id2, type_id=1).mask
-    # mask2_rest=Mask.objects.get(map=id2, type_id=0).mask
-    # demolition_area=(((mask1_building.union(mask1_farm)).union(mask1_forest)).union(mask1_shack)).intersection(mask2_rest)
-    # ibuild_area=(((mask1_grass.union(mask1_forest)).union(mask1_road)).union(mask1_water)).intersection(mask2_building)
-    data={'building':mask1_building.geojson}
-    # demolition_area_geojson={'type': 'Feature', 'geometry': demolition_area.geojson,'properties':{'type':'change'}}
-    # ibuild_area_geojson = {'type': 'Feature', 'geometry': ibuild_area.geojson, 'properties': {'type': 'change'}}
-    # JsonResponse({"demolition_area":demolition_area_geojson,"ibuild_area":ibuild_area_geojson})
-    JsonResponse(data)
+    id1=request.POST.get("id1",False)
+    id2 = request.POST.get("id2", False)
+    interesting_area=request.POST.get("interesting_area", False)
+    interesting_area_list=[]
+    origin=Polygon()
+    for ir in interesting_area:
+        origin=origin.union(GEOSGeometry(ir))
+    mask1_building = Mask.objects.get(map=67, type_id=1).mask.union(origin)
+    mask1_farm = Mask.objects.get(map=67, type_id=5).mask.union(origin)
+    mask1_forest = Mask.objects.get(map=67, type_id=7).mask.union(origin)
+    mask1_shack = Mask.objects.get(map=67, type_id=6).mask.union(origin)
+    mask1_water = Mask.objects.get(map=67, type_id=4).mask.union(origin)
+    mask1_grass = Mask.objects.get(map=67, type_id=3).mask.union(origin)
+    mask1_road = Mask.objects.get(map=67, type_id=2).mask.union(origin)
+    mask2_building = Mask.objects.get(map=id2, type_id=1).mask.union(origin)
+    mask2_rest=Mask.objects.get(map=id2, type_id=0).mask.union(origin)
+    demolition_area=(((mask1_building.union(mask1_farm)).union(mask1_forest)).union(mask1_shack)).intersection(mask2_rest)
+    ibuild_area=(((mask1_grass.union(mask1_forest)).union(mask1_road)).union(mask1_water)).intersection(mask2_building)
+
+    demolition_area_geojson={'type': 'Feature', 'geometry': demolition_area.geojson,'properties':{'type':'change'}}
+    ibuild_area_geojson = {'type': 'Feature', 'geometry': ibuild_area.geojson, 'properties': {'type': 'change'}}
+    return JsonResponse({"demolition_area":demolition_area_geojson,"ibuild_area":ibuild_area_geojson})
+
+
 def index(request):
     return render(request,
                   template_name='index.html')
@@ -149,7 +173,6 @@ def password_revise(request):
                   template_name='password_revise.html')
 
 def query_map(request):
-    maps=Bmap.objects.all()
     d_maps = {}
     for i in range(len(maps)):
         d_maps[i] = model_to_dict(maps[i])

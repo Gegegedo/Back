@@ -243,6 +243,9 @@ def preprogress(id):
     # buildOverviews()
     # RPCOrthorectification()
     #正式代码
+    # uploadfolder=os.path.join(MAPBASEPATH,'GF2_PMS2_E117.4_N39.1_20170510_L1A0002351826')
+    # uploadfiles=getUploadFile(uploadfolder)
+    # RPCOrthorectification(Alpha=False,is_label=True)
     uploadfolder =os.path.join(MAPBASEPATH,Bmap.objects.get(id=id).name)
     uploadfiles=getUploadFile(uploadfolder)
     result = uploadfiles
