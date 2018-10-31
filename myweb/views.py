@@ -40,10 +40,21 @@ def index_new(request):
 @csrf_exempt
 def map_all(request):
     maps=Bmap.objects.all()
+
     map_data=[]
     for map in maps:
+        mask_area =[]
+        masks=Mask.objects.filter(map=map.id).order_by('type_id')
+        for mask in masks:
+            mask_area.append(mask.mask.area)
+        map_area=map.poly.area
+
+        center=map.poly.centroid
         map=model_to_dict(map)
+        map['mask_area']=mask_area
         map.pop("polygon")
+        map["map_area"]=map_area
+        map['center']=[center[0],center[1]]
         map_data.append(map)
     return JsonResponse({'maps':map_data})
 
@@ -57,13 +68,13 @@ def map_compare(request):
     origin=Polygon()
     for ir in interesting_area:
         origin=origin.union(GEOSGeometry(ir))
-    mask1_building = Mask.objects.get(map=67, type_id=1).mask.union(origin)
-    mask1_farm = Mask.objects.get(map=67, type_id=5).mask.union(origin)
-    mask1_forest = Mask.objects.get(map=67, type_id=7).mask.union(origin)
-    mask1_shack = Mask.objects.get(map=67, type_id=6).mask.union(origin)
-    mask1_water = Mask.objects.get(map=67, type_id=4).mask.union(origin)
-    mask1_grass = Mask.objects.get(map=67, type_id=3).mask.union(origin)
-    mask1_road = Mask.objects.get(map=67, type_id=2).mask.union(origin)
+    mask1_building = Mask.objects.get(map=id1, type_id=1).mask.union(origin)
+    mask1_farm = Mask.objects.get(map=id1, type_id=5).mask.union(origin)
+    mask1_forest = Mask.objects.get(map=id1, type_id=7).mask.union(origin)
+    mask1_shack = Mask.objects.get(map=id1, type_id=6).mask.union(origin)
+    mask1_water = Mask.objects.get(map=id1, type_id=4).mask.union(origin)
+    mask1_grass = Mask.objects.get(map=id1, type_id=3).mask.union(origin)
+    mask1_road = Mask.objects.get(map=id1, type_id=2).mask.union(origin)
     mask2_building = Mask.objects.get(map=id2, type_id=1).mask.union(origin)
     mask2_rest=Mask.objects.get(map=id2, type_id=0).mask.union(origin)
     demolition_area=(((mask1_building.union(mask1_farm)).union(mask1_forest)).union(mask1_shack)).intersection(mask2_rest)
