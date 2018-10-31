@@ -27,6 +27,7 @@ import os
 from django.views.decorators.csrf import csrf_exempt
 import gdal
 from myweb.ImagryProcess import Preprocess
+from django.contrib.gis.db.models.functions import Area,Transform
 import time
 User = get_user_model()
 import tarfile
@@ -43,18 +44,16 @@ def map_all(request):
 
     map_data=[]
     for map in maps:
-        mask_area =[]
-        masks=Mask.objects.filter(map=map.id).order_by('type_id')
-        for mask in masks:
-            mask_area.append(mask.mask.area)
-        map_area=map.poly.area
-
-        center=map.poly.centroid
+        mask_area=[]
+        areas=Mask.objects.annotate(area=Area(Transform('mask',4527))).filter(map=map.id).order_by('type_id').values('area')
+        for area in areas:
+            mask_area.append(round(area['area'].standard/1000000,2))
+        center=map.polygon.centroid
         map=model_to_dict(map)
+        map["map_area"] = sum(mask_area)
+        map['center'] = [center[0], center[1]]
         map['mask_area']=mask_area
         map.pop("polygon")
-        map["map_area"]=map_area
-        map['center']=[center[0],center[1]]
         map_data.append(map)
     return JsonResponse({'maps':map_data})
 
