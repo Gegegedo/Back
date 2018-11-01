@@ -11,6 +11,7 @@ from collections import defaultdict
 import requests
 import time
 from geoserver.catalog import Catalog
+from django.contrib.gis.gdal import CoordTransform,SpatialReference
 MAPBASEPATH='/media/zhou/Document/yaogan/TJ'
 mask_url='http://localhost:8080/geoserver/rest/workspaces/Mask/datastores/Mask/featuretypes'
 map_url="http://localhost:8080/geoserver/rest/"
@@ -174,6 +175,7 @@ def preprogress(id):
 
     def save_mask():
         try:
+            ct=CoordTransform(SpatialReference('WGS84'), SpatialReference('4527'))
             label_path=os.path.join(uploadfiles[0],'labelRPC.tif')
             dataset = gdal.Open(label_path)
             GeoTransform = dataset.GetGeoTransform()
@@ -191,7 +193,7 @@ def preprogress(id):
                 # if label_type in (0,):
                 #     continue
                 mp = fit_by_contours((im_data == label_type).astype(np.uint8), GeoTransform)
-                m = Mask(map=Bmap.objects.get(id=id),type_id=int(label_type), mask=mp)
+                m = Mask(map=Bmap.objects.get(id=id),type_id=int(label_type), mask=mp,area=mp.transform(ct).area)
                 m.save()
                 # img[im_data == label_type]=127
                 # cv2.imwrite(str(label_type)+".jpg",img)
