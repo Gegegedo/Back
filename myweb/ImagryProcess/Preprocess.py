@@ -193,7 +193,7 @@ def preprogress(id):
                 # if label_type in (0,):
                 #     continue
                 mp = fit_by_contours((im_data == label_type).astype(np.uint8), GeoTransform)
-                m = Mask(map=Bmap.objects.get(id=id),type_id=int(label_type), mask=mp,area=mp.transform(ct).area)
+                m = Mask(map=Bmap.objects.get(id=id),type_id=int(label_type), mask=mp,area=round(mp.transform(ct,clone=True).area/1000000,2))
                 m.save()
                 # img[im_data == label_type]=127
                 # cv2.imwrite(str(label_type)+".jpg",img)

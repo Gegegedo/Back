@@ -57,7 +57,7 @@ class Mask(models.Model):
     map=models.ForeignKey(Bmap,on_delete=models.CASCADE,default=False)
     type_id=models.IntegerField(blank=True)
     mask=models.MultiPolygonField()
-    area=models.FloatField(blank=True)
+    area=models.FloatField(blank=True,default=0)
 
 # class Bmap(models.Model):
 #     map_name=models.CharField(max_length=20,blank=True)

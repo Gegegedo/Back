@@ -38,6 +38,7 @@ def index_new(request):
     return render(request,
                   template_name='index.html')
 
+
 @csrf_exempt
 def map_all(request):
     maps=Bmap.objects.all()
@@ -45,9 +46,11 @@ def map_all(request):
     map_data=[]
     for map in maps:
         mask_area=[]
-        areas=Mask.objects.annotate(area=Area(Transform('mask',4527))).filter(map=map.id).order_by('type_id').values('area')
+        areas=Mask.objects.filter(map=map.id).order_by('type_id').values('area')
+        #areas=Mask.objects.annotate(area=Area(Transform('mask',4527))).filter(map=map.id).order_by('type_id').values('area')
         for area in areas:
-            mask_area.append(round(area['area'].standard/1000000,2))
+             #mask_area.append(round(area['area'].standard/1000000,2))
+           mask_area.append(area['area'])
         center=map.polygon.centroid
         map=model_to_dict(map)
         map["map_area"] = sum(mask_area)
@@ -183,10 +186,8 @@ def password_revise(request):
                   template_name='password_revise.html')
 
 def query_map(request):
-    d_maps = {}
-    for i in range(len(maps)):
-        d_maps[i] = model_to_dict(maps[i])
-    return render(request,'query_map.html',{'d_maps': json.dumps(d_maps, cls=DjangoJSONEncoder)})
+
+    return render(request,template_name='query_map.html')
 
 
 def _upload_map(request):
