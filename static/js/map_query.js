@@ -32,6 +32,14 @@ function showList(){
             {field: 'desc', title:'影像描述', width:'20%', align:'center'},
             {field: 'capture_time', title:'拍摄时间', width:'10%', align:'center'},
             {field: 'upload_time', title:'上传时间', width:'10%', align:'center'},
+            {field: 'tool',title: '操作', align: 'center',
+                          formatter: function (value,row,index){
+                              var element = "<a href='#' class='operate delete_href' id='delete"+row.id +"' data-id='"+row.id +"' onclick='changeStatus(\" "+row.id+" \")' onmouseover='del_mouseOver(\" "+row.id+" \")' onmouseout='del_mouseOut(\" "+row.id+" \")'>"
+                              + "<img id='del_img"+row.id+"' class='nav-img' src='../static/img/delete.png'>"
+                              + "</a>";
+                              return element;
+                          },
+                  }
 
         ],
 
@@ -86,6 +94,22 @@ function downloadImg(id){
                   alert(error);
               }
         });
+}
+function changeStatus(data){
+
+    var num=data;
+    $.ajax({
+        url:'/delete_map/',
+        type:'post',
+        data: {'map_id':num},
+        success: function(){
+            alert('删除成功！');
+             $("#resource_tab").bootstrapTable('remove',{
+                field: 'id',
+                values: [parseInt(data)],
+            })
+        }
+    });
 }
 function deleteImg(id){
     var globeID=parseInt(id);

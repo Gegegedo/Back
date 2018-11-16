@@ -29,9 +29,11 @@ import gdal
 from myweb.ImagryProcess import Preprocess
 from django.contrib.gis.db.models.functions import Area,Transform
 import time
+from geoserver.catalog import Catalog
 User = get_user_model()
-import tarfile
-MAPBASEPATH='/media/zhou/系统/二期图像2/天津航天城'
+MAPBASEPATH='/media/zhou/Document/yaogan/TJ'
+mask_url='http://localhost:8080/geoserver/rest/workspaces/Mask/datastores/Mask/featuretypes'
+map_url="http://localhost:8080/geoserver/rest/"
 import requests
 # Create your views here.
 def index_new(request):
@@ -226,6 +228,34 @@ def _upload_map(request):
     # except Exception as err:
     #     Bmap.objects.filter(id=map.id).delete()
     #     return render(request,'upload_map.html',{'message':str(err)})
+@csrf_exempt
+def delete_map(request):
+    map_id=request.POST.get('map_id',False)
+    cat = Catalog(map_url, 'admin', 'geoserver')
+    if cat.get_layer('Map:' + map_id):
+        cat.delete(cat.get_layer('Map:' + map_id))
+        cat.reload()
+    for label_type in range(1, 8):
+        if cat.get_layer('Mask:' + map_id + '_' + str(label_type)):
+            cat.delete(cat.get_layer('Mask:' + map_id + '_' + str(label_type)))
+            cat.reload()
+    try:
+        if cat.get_store(map_id):
+            st=cat.get_store(map_id)
+            cat.delete(st)
+            cat.reload()
+    except Exception:
+        pass
+    if Bmap.objects.filter(id=map_id):
+        map_name=Bmap.objects.get(id=map_id).name
+        dir_root=os.path.join(MAPBASEPATH,map_name)
+        delete_files=(map_id+".jpg",'chaneltransform.tif','chaneltransform_rpc.txt', 'chaneltransformRPC.txt', 'chaneltransformRPC.tif.ovr',
+                      'label.tif','label_rpc.txt','labelRPC.tif')
+        for file in delete_files:
+            if os.path.exists(file):
+                os.remove(os.path.join(dir_root,file))
+        Bmap.objects.filter(id=map_id).delete()
+    return HttpResponse("success")
 
 
 def deliver_map(request):
